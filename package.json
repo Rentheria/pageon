@@ -10,6 +10,8 @@
     "test": "pnpm --filter @pageon/core test",
     "build:angular": "pnpm --filter @pageon/angular build",
     "dev:angular": "pnpm --filter @pageon/angular dev",
-    "typecheck:angular": "pnpm --filter @pageon/angular typecheck"
+    "typecheck:angular": "pnpm --filter @pageon/angular typecheck",
+    "build:ionic": "pnpm --filter @pageon/ionic build",
+    "dev:ionic-example": "pnpm --filter @pageon/ionic-example dev"
   }
 }
