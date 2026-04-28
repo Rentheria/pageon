@@ -53,6 +53,9 @@ export class PageonViewerComponent implements AfterViewInit, OnChanges, OnDestro
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.viewer) {
+      if (changes['src'] && this.src) {
+        this.createViewer();
+      }
       return;
     }
 
