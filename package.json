@@ -1,0 +1,11 @@
+{
+  "name": "pageon",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.4.1",
+  "scripts": {
+    "dev": "pnpm --filter @pageon/vanilla-js dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

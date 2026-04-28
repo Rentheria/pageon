@@ -1,0 +1,26 @@
+{
+  "name": "@pageon/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/pageon-core.js",
+  "module": "dist/pageon-core.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/pageon-core.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.2.0"
+  }
+}
