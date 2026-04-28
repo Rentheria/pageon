@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && cp README.md dist/README.md && cp package.json dist/package.json",
+    "build": "tsc -p tsconfig.build.json && mkdir -p dist/lib/pageon-viewer && cp src/lib/pageon-viewer/pageon-viewer.component.html dist/lib/pageon-viewer/pageon-viewer.component.html && cp src/lib/pageon-viewer/pageon-viewer.component.scss dist/lib/pageon-viewer/pageon-viewer.component.scss && cp README.md dist/README.md && cp package.json dist/package.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
