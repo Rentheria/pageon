@@ -1,0 +1,36 @@
+{
+  "name": "@pageon/angular",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && mkdir -p dist/lib/pageon-viewer && cp src/lib/pageon-viewer/pageon-viewer.component.html dist/lib/pageon-viewer/pageon-viewer.component.html && cp src/lib/pageon-viewer/pageon-viewer.component.scss dist/lib/pageon-viewer/pageon-viewer.component.scss && cp README.md dist/README.md && cp package.json dist/package.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@angular/common": ">=16.0.0 <19.0.0",
+    "@angular/core": ">=16.0.0 <19.0.0",
+    "@pageon/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@angular/common": "^18.2.13",
+    "@angular/core": "^18.2.13",
+    "@angular/platform-browser": "^18.2.13",
+    "@angular/platform-browser-dynamic": "^18.2.13",
+    "@pageon/core": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^2.1.8",
+    "jsdom": "^25.0.1",
+    "zone.js": "^0.14.10"
+  }
+}

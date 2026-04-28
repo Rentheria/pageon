@@ -38,7 +38,7 @@ export class Pageon {
   public isRendering = false;
   public loadingState: PageonLoadingState = 'loading-document';
 
-  private readonly options: Required<PageonOptions>;
+  private options: Required<PageonOptions>;
   private readonly emitter = new EventEmitter<PageonEvents>();
   private readonly loader = new PdfLoader();
   private readonly renderer: PageRenderer;
@@ -253,6 +253,49 @@ export class Pageon {
     this.document = null;
     this.totalPages = 0;
     await this.initialize();
+  }
+
+  updateOptions(nextOptions: Partial<Omit<PageonOptions, 'container'>>): void {
+    const previous = this.options;
+    this.options = {
+      ...this.options,
+      ...nextOptions
+    };
+
+    this.scale = this.clampScale(this.scale);
+    this.renderer.setScale(this.scale);
+
+    if (previous.showPageIndicator !== this.options.showPageIndicator) {
+      if (this.options.showPageIndicator) {
+        this.container.appendChild(this.indicator);
+      } else {
+        this.indicator.remove();
+      }
+    }
+
+    if (previous.keyboard !== this.options.keyboard) {
+      if (this.options.keyboard) {
+        this.keyboardController.enable();
+      } else {
+        this.keyboardController.disable();
+      }
+    }
+
+    if (previous.gestures !== this.options.gestures) {
+      if (this.options.gestures) {
+        this.gestureController.enable();
+      } else {
+        this.gestureController.disable();
+      }
+    }
+
+    if (previous.responsive !== this.options.responsive) {
+      if (this.options.responsive) {
+        this.responsiveController.start();
+      } else {
+        this.responsiveController.stop();
+      }
+    }
   }
 
   async destroy(): Promise<void> {
