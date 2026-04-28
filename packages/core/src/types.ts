@@ -1,12 +1,40 @@
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import type { PageonError } from './PageonError';
 
 export type PageonAnimation = 'none' | 'fade' | 'slide';
 export type PageonFitMode = 'none' | 'width' | 'height' | 'page';
 export type PageonLoadingState = 'idle' | 'loading-document' | 'rendering-page' | 'preloading' | 'error';
+export type PageonSource = string | Blob | ArrayBuffer | File;
+
+export interface PageonSecurityOptions {
+  allowRemote?: boolean;
+  allowedDomains?: string[];
+  allowBlob?: boolean;
+  allowDataUrl?: boolean;
+  maxFileSize?: number;
+}
+
+export interface PageonPerformanceOptions {
+  maxCachedPages?: number;
+  maxCanvasPixels?: number;
+  enableAutoCleanup?: boolean;
+  mobileMemoryMode?: 'normal' | 'low';
+}
+
+export interface PageonStats {
+  currentPage: number;
+  totalPages: number;
+  cachedPages: number;
+  activeRenders: number;
+  lastRenderTimeMs: number;
+  memoryEstimate: number;
+  scale: number;
+  fitMode: PageonFitMode;
+}
 
 export interface PageonOptions {
   container: string | HTMLElement;
-  src: string;
+  src: PageonSource;
   animation?: PageonAnimation;
   initialPage?: number;
   scale?: number;
@@ -19,6 +47,11 @@ export interface PageonOptions {
   keyboard?: boolean;
   gestures?: boolean;
   responsive?: boolean;
+  debug?: boolean;
+  security?: PageonSecurityOptions;
+  performance?: PageonPerformanceOptions;
+  pdfWorkerSrc?: string;
+  useWorker?: boolean;
 }
 
 export interface PageonPublicState {
@@ -31,6 +64,14 @@ export interface PageonPublicState {
   fitMode: PageonFitMode;
 }
 
+export interface PageonPerformanceEvent {
+  pageNumber: number;
+  renderTimeMs: number;
+  cacheHit: boolean;
+  scale: number;
+  canvasPixels: number;
+}
+
 export interface PageonEvents {
   loaded: { totalPages: number };
   pageChange: { currentPage: number; totalPages: number };
@@ -40,7 +81,8 @@ export interface PageonEvents {
   resize: { width: number; height: number; scale: number; mode: PageonFitMode };
   gesture: { type: 'swipe-left' | 'swipe-right' | 'double-tap' | 'pinch'; scale?: number };
   loading: { state: PageonLoadingState; isLoading: boolean; isRendering: boolean };
-  error: { error: Error };
+  error: { error: PageonError };
+  performance: PageonPerformanceEvent;
 }
 
 export interface PdfLoaderResult {

@@ -1,4 +1,5 @@
 import type { PDFDocumentProxy, PDFRenderTask } from 'pdfjs-dist';
+import { PageonError } from './PageonError';
 import type { RenderedPage } from './types';
 
 export class PageRenderer {
@@ -34,7 +35,7 @@ export class PageRenderer {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) {
-      throw new Error('Unable to acquire 2D canvas context.');
+      throw new PageonError({ code: 'RENDER_FAILED', message: 'Unable to acquire 2D canvas context.' });
     }
 
     canvas.width = Math.ceil(viewport.width);
@@ -47,15 +48,20 @@ export class PageRenderer {
 
     try {
       await this.renderTask.promise;
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     } catch (error) {
       if ((error as { name?: string }).name === 'RenderingCancelledException') {
-        throw error;
+        throw new PageonError({ code: 'RENDER_CANCELLED', message: 'Render cancelled.', cause: error });
       }
-      throw new Error(`Error rendering page ${pageNumber}: ${(error as Error).message}`);
+      throw new PageonError({
+        code: 'RENDER_FAILED',
+        message: `Error rendering page ${pageNumber}.`,
+        cause: error
+      });
     }
 
     if (renderId !== this.activeRenderId) {
-      throw new Error('Stale render result ignored.');
+      throw new PageonError({ code: 'RENDER_CANCELLED', message: 'Stale render result ignored.' });
     }
 
     return {
