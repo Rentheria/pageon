@@ -12,6 +12,62 @@
       .status { margin-top: 8px; color: #98a6d9; }
       .error { margin-top: 8px; color: #ff8796; min-height: 24px; }
       .metrics { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+
+      .read-overlay {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        gap: 8px;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(8, 12, 28, 0.78);
+        border: 1px solid rgba(99, 124, 183, 0.4);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        opacity: 0;
+        transition: opacity 0.25s ease;
+        pointer-events: none;
+        z-index: 2147483647;
+      }
+      .read-overlay button {
+        border: 1px solid rgba(120, 145, 200, 0.35);
+        background: rgba(20, 30, 60, 0.9);
+        color: #e6ecff;
+        padding: 6px 12px;
+        font-size: 16px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .read-overlay button:hover { background: rgba(40, 60, 110, 0.95); }
+      .read-overlay #readPageLabel { padding: 0 6px; color: #cdd6ff; font-variant-numeric: tabular-nums; }
+
+      body.read-mode { padding: 0; background: #000; overflow: hidden; }
+      body.read-mode h1,
+      body.read-mode .toolbar,
+      body.read-mode .status,
+      body.read-mode .metrics,
+      body.read-mode .error { display: none !important; }
+      body.read-mode #viewer {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        background: #000;
+        cursor: none;
+      }
+      body.read-mode .read-overlay { display: inline-flex; }
+      body.read-mode.overlay-visible { cursor: default; }
+      body.read-mode.overlay-visible #viewer { cursor: default; }
+      body.read-mode.overlay-visible .read-overlay {
+        opacity: 1;
+        pointer-events: auto;
+      }
     </style>
   </head>
   <body>
@@ -26,6 +82,14 @@
           <option value="none">none</option>
           <option value="fade">fade</option>
           <option value="slide" selected>slide</option>
+          <option value="page-flip">page-flip</option>
+        </select>
+      </label>
+      <label>
+        Vista:
+        <select id="viewMode">
+          <option value="single" selected>1 página</option>
+          <option value="spread">2 páginas</option>
         </select>
       </label>
       <button id="zoomIn">Zoom +</button>
@@ -36,6 +100,9 @@
       <button id="fitPage">Fit page</button>
       <button id="toggleKeyboard">Keyboard: on</button>
       <button id="toggleGestures">Gestures: on</button>
+      <label>PDF: <input id="pdfFile" type="file" accept="application/pdf" /></label>
+      <button id="useDefaultPdf">Use default PDF</button>
+      <button id="enterFullscreen">Fullscreen lectura</button>
       <span id="pageLabel">Página 1 de ?</span>
     </div>
 
@@ -47,6 +114,13 @@
       <span id="loadingLabel">Loading: -</span>
     </div>
     <div class="error" id="error"></div>
+
+    <div id="readOverlay" class="read-overlay" role="toolbar" aria-label="Lectura">
+      <button id="readPrev" aria-label="Página anterior">&larr;</button>
+      <span id="readPageLabel">- / -</span>
+      <button id="readNext" aria-label="Página siguiente">&rarr;</button>
+      <button id="exitFullscreen" aria-label="Salir de pantalla completa">&times;</button>
+    </div>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

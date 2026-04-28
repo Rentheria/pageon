@@ -8,33 +8,60 @@ export interface PdfLoaderOptions {
   useWorker?: boolean;
 }
 
+function normalizeWorkerSrc(value: unknown): string {
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+
+  if (value && typeof value === 'object' && 'default' in value) {
+    const nested = (value as { default?: unknown }).default;
+    if (typeof nested === 'string' && nested.length > 0) {
+      return nested;
+    }
+  }
+
+  return '';
+}
+
 export class PdfLoader {
   private document: PDFDocumentProxy | null = null;
   private options: Required<PdfLoaderOptions> = {
-    workerSrc: defaultWorkerSrc,
+    workerSrc: normalizeWorkerSrc(defaultWorkerSrc),
     useWorker: true
   };
 
   configure(options?: PdfLoaderOptions): void {
-    this.options = {
-      ...this.options,
-      ...options
-    };
+    if (!options) return;
 
-    if (this.options.useWorker) {
-      GlobalWorkerOptions.workerSrc = this.options.workerSrc;
+    if (options.useWorker !== undefined) {
+      this.options.useWorker = options.useWorker;
     }
+
+    // Do not overwrite the bundled default worker URL when callers pass `undefined`
+    // (e.g. `pdfWorkerSrc: ''` → `workerSrc` omitted in Pageon).
+    if (options.workerSrc !== undefined) {
+      this.options.workerSrc = normalizeWorkerSrc(options.workerSrc);
+    }
+
+    const hasValidWorkerSrc = typeof this.options.workerSrc === 'string' && this.options.workerSrc.length > 0;
+    if (this.options.useWorker && hasValidWorkerSrc) {
+      GlobalWorkerOptions.workerSrc = this.options.workerSrc;
+      return;
+    }
+
+    // Fallback: run without worker when bundler cannot provide a valid worker URL string.
+    this.options.useWorker = false;
   }
 
   async load(src: PageonSource | Uint8Array): Promise<PdfLoaderResult> {
     try {
-      const loadingTask = getDocument(
-        typeof src === 'string' || src instanceof Uint8Array || src instanceof ArrayBuffer
-          ? (typeof src === 'string'
-              ? ({ url: src, disableWorker: !this.options.useWorker } as const)
-              : ({ data: src, disableWorker: !this.options.useWorker } as const))
-          : ({ data: new Uint8Array(await src.arrayBuffer()), disableWorker: !this.options.useWorker } as const)
-      );
+      const source =
+        typeof src === 'string'
+          ? { url: src }
+          : src instanceof Uint8Array || src instanceof ArrayBuffer
+            ? { data: src }
+            : { data: new Uint8Array(await src.arrayBuffer()) };
+      const loadingTask = getDocument(source);
 
       this.document = await loadingTask.promise;
       return {

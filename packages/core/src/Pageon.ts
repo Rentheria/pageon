@@ -9,6 +9,7 @@ import { PageCache } from './PageCache';
 import { PageonError, toPageonError } from './PageonError';
 import { PdfLoader } from './PdfLoader';
 import { PageRenderer } from './PageRenderer';
+import { PageTurnController } from './PageTurnController';
 import { RenderQueue } from './RenderQueue';
 import { ResponsiveController } from './ResponsiveController';
 import { validateSource } from './SourceValidator';
@@ -21,6 +22,7 @@ import type {
   PageonPublicState,
   PageonSecurityOptions,
   PageonStats,
+  PageonViewMode,
   RenderedPage
 } from './types';
 
@@ -49,6 +51,7 @@ const DEFAULT_OPTIONS: Required<Omit<PageonOptions, 'container' | 'src' | 'secur
   maxScale: 3,
   zoomStep: 0.25,
   fitMode: 'none',
+  viewMode: 'single',
   keyboard: true,
   gestures: true,
   responsive: true,
@@ -78,13 +81,16 @@ export class Pageon {
   private readonly keyboardController: KeyboardController;
   private readonly gestureController: GestureController;
   private readonly responsiveController: ResponsiveController;
+  private readonly pageTurnController: PageTurnController;
 
   private document: PDFDocumentProxy | null = null;
   private mountedCanvas: HTMLCanvasElement | null = null;
   private destroyed = false;
   private scale: number;
   private fitMode: PageonFitMode;
+  private viewMode: PageonViewMode;
   private lastRenderTimeMs = 0;
+  private suppressNextTransition = false;
 
   constructor(options: PageonOptions) {
     this.ensureBrowserCompatibility();
@@ -105,8 +111,12 @@ export class Pageon {
     this.container = resolvedContainer;
     this.scale = this.clampScale(this.options.scale);
     this.fitMode = this.options.fitMode;
+    this.viewMode = this.options.viewMode;
     this.renderer = new PageRenderer(this.scale);
-    this.loader.configure({ workerSrc: this.options.pdfWorkerSrc || undefined, useWorker: this.options.useWorker });
+    this.loader.configure({
+      ...(typeof this.options.pdfWorkerSrc === 'string' && this.options.pdfWorkerSrc.trim().length > 0 ? { workerSrc: this.options.pdfWorkerSrc } : {}),
+      useWorker: this.options.useWorker
+    });
     this.memory = new MemoryManager(this.options.performance);
     this.cache = new PageCache(this.options.performance.maxCachedPages, (rendered) => this.memory.releaseCanvas(rendered));
 
@@ -141,6 +151,28 @@ export class Pageon {
       onGesture: (type) => this.emitter.emit('gesture', { type })
     });
 
+    this.pageTurnController = new PageTurnController(this.stage, {
+      canTurn: (direction) =>
+        direction === 'forward' ? this.currentPage + this.getPageStep() <= this.totalPages : this.currentPage > 1,
+      getCurrentCanvas: () => this.mountedCanvas,
+      getNeighborCanvas: (direction) => {
+        const targetPage = direction === 'forward' ? this.currentPage + this.getPageStep() : this.currentPage - this.getPageStep();
+        return this.getRenderedCanvasForPage(targetPage);
+      },
+      commit: async (direction) => {
+        this.suppressNextTransition = true;
+        try {
+          if (direction === 'forward') {
+            await this.nextPage();
+          } else {
+            await this.prevPage();
+          }
+        } finally {
+          this.suppressNextTransition = false;
+        }
+      }
+    });
+
     this.responsiveController = new ResponsiveController(this.container, (size) => {
       if (!this.document || this.destroyed) {
         return;
@@ -158,6 +190,7 @@ export class Pageon {
     if (this.options.keyboard) this.keyboardController.enable();
     if (this.options.gestures) this.gestureController.enable();
     if (this.options.responsive) this.responsiveController.start();
+    if (this.options.animation === 'page-flip') this.pageTurnController.enable();
 
     void this.initialize();
   }
@@ -174,7 +207,8 @@ export class Pageon {
       isRendering: this.isRendering,
       loadingState: this.loadingState,
       scale: this.scale,
-      fitMode: this.fitMode
+      fitMode: this.fitMode,
+      viewMode: this.viewMode
     };
   }
 
@@ -188,12 +222,13 @@ export class Pageon {
       lastRenderTimeMs: this.lastRenderTimeMs,
       memoryEstimate: memory.memoryEstimate,
       scale: this.scale,
-      fitMode: this.fitMode
+      fitMode: this.fitMode,
+      viewMode: this.viewMode
     };
   }
 
-  async nextPage(): Promise<void> { await this.goToPage(this.currentPage + 1); }
-  async prevPage(): Promise<void> { await this.goToPage(this.currentPage - 1); }
+  async nextPage(): Promise<void> { await this.goToPage(this.currentPage + this.getPageStep()); }
+  async prevPage(): Promise<void> { await this.goToPage(this.currentPage - this.getPageStep()); }
 
   async goToPage(page: number): Promise<void> {
     if (!this.document || this.destroyed) return;
@@ -203,11 +238,12 @@ export class Pageon {
     }
 
     const previousPage = this.currentPage;
-    this.currentPage = page;
-    await this.renderCurrentPage(page, page >= previousPage);
+    const targetPage = this.normalizeDisplayPage(page);
+    this.currentPage = targetPage;
+    await this.renderCurrentPage(targetPage, targetPage >= previousPage);
     this.updateIndicator();
     this.emitter.emit('pageChange', { currentPage: this.currentPage, totalPages: this.totalPages });
-    void this.preloadNearbyPages(page);
+    void this.preloadNearbyPages(targetPage);
   }
 
   async zoomIn(): Promise<void> { await this.setZoom(this.scale + this.options.zoomStep); }
@@ -256,6 +292,20 @@ export class Pageon {
 
   updateOptions(nextOptions: Partial<Omit<PageonOptions, 'container'>>): void {
     this.options = { ...this.options, ...nextOptions };
+    if (nextOptions.viewMode) {
+      this.viewMode = nextOptions.viewMode;
+    }
+    if (this.options.animation === 'page-flip') {
+      this.pageTurnController.enable();
+    } else {
+      this.pageTurnController.disable();
+    }
+  }
+
+  getRenderedCanvasForPage(page: number): HTMLCanvasElement | null {
+    if (page < 1 || page > this.totalPages) return null;
+    const cacheKey = this.getDisplayCacheKey(this.normalizeDisplayPage(page));
+    return this.cache.has(cacheKey) ? this.cache.get(cacheKey)?.canvas ?? null : null;
   }
 
   async destroy(): Promise<void> {
@@ -266,6 +316,7 @@ export class Pageon {
     this.keyboardController.destroy();
     this.gestureController.destroy();
     this.responsiveController.destroy();
+    this.pageTurnController.destroy();
     this.emitter.removeAll();
     this.stage.innerHTML = '';
     this.indicator.remove();
@@ -289,7 +340,7 @@ export class Pageon {
       this.document = document;
       this.totalPages = totalPages;
       this.isLoading = false;
-      this.currentPage = Math.min(Math.max(this.options.initialPage, 1), this.totalPages);
+      this.currentPage = this.normalizeDisplayPage(Math.min(Math.max(this.options.initialPage, 1), this.totalPages));
       if (this.fitMode !== 'none') await this.applyFitMode();
       this.emitter.emit('loaded', { totalPages: this.totalPages });
       await this.renderCurrentPage(this.currentPage, true);
@@ -312,16 +363,17 @@ export class Pageon {
   private async renderCurrentPage(page: number, forward: boolean): Promise<void> {
     if (!this.document) return;
 
+    const displayPage = this.normalizeDisplayPage(page);
     this.isRendering = true;
     this.updateLoadingState('rendering-page');
-    this.emitter.emit('rendering', { page, scale: this.scale });
+    this.emitter.emit('rendering', { page: displayPage, scale: this.scale });
     const renderStart = performance.now();
 
     try {
-      const cacheKey = PageCache.key(page, this.scale);
+      const cacheKey = this.getDisplayCacheKey(displayPage);
       const cached = this.cache.get(cacheKey);
       const cacheHit = Boolean(cached);
-      const rendered = cached ?? (await this.queue.enqueue(cacheKey, 1, () => this.renderer.render(this.document as PDFDocumentProxy, page)));
+      const rendered = cached ?? (await this.queue.enqueue(cacheKey, 1, () => this.renderDisplay(displayPage)));
       const pixels = rendered.canvas.width * rendered.canvas.height;
 
       if (!cacheHit && this.memory.canCache(rendered)) {
@@ -330,13 +382,14 @@ export class Pageon {
 
       if (this.destroyed) return;
 
-      await this.animator.transition(this.stage, this.mountedCanvas, rendered.canvas, this.options.animation, forward);
+      const effectiveAnimation = this.suppressNextTransition ? 'none' : this.options.animation;
+      await this.animator.transition(this.stage, this.mountedCanvas, rendered.canvas, effectiveAnimation, forward);
       this.mountedCanvas = rendered.canvas;
 
       this.lastRenderTimeMs = Math.round(performance.now() - renderStart);
       if (this.options.debug) {
         this.emitter.emit('performance', {
-          pageNumber: page,
+          pageNumber: displayPage,
           renderTimeMs: this.lastRenderTimeMs,
           cacheHit,
           scale: this.scale,
@@ -345,7 +398,7 @@ export class Pageon {
       }
 
       if (this.options.performance.enableAutoCleanup) {
-        this.cleanupFarPages(page);
+        this.cleanupFarPages(displayPage);
       }
     } catch (error) {
       const normalized = toPageonError(error, { code: 'RENDER_FAILED', message: 'Failed to render page.' });
@@ -372,18 +425,20 @@ export class Pageon {
     this.updateLoadingState('preloading');
 
     const candidates = new Set<number>();
+    const pageStep = this.getPageStep();
     for (let step = 1; step <= this.options.preload; step += 1) {
-      candidates.add(origin + step);
-      candidates.add(origin - step);
+      candidates.add(origin + step * pageStep);
+      candidates.add(origin - step * pageStep);
     }
 
     for (const page of candidates) {
-      const cacheKey = PageCache.key(page, this.scale);
+      const displayPage = this.normalizeDisplayPage(page);
+      const cacheKey = this.getDisplayCacheKey(displayPage);
       if (page < 1 || page > this.totalPages || this.cache.has(cacheKey)) continue;
 
       try {
         const rendered: RenderedPage = await this.queue.enqueue(cacheKey, this.getPriority(origin, page), () =>
-          this.renderer.render(this.document as PDFDocumentProxy, page)
+          this.renderDisplay(displayPage)
         );
         if (this.memory.canCache(rendered)) {
           this.cache.set(cacheKey, rendered);
@@ -401,7 +456,9 @@ export class Pageon {
   private async applyFitMode(): Promise<void> {
     if (!this.document || this.fitMode === 'none') return;
 
-    const dimensions = await this.renderer.getPageDimensions(this.document, this.currentPage);
+    const dimensions = this.viewMode === 'spread'
+      ? await this.renderer.getSpreadDimensions(this.document, this.normalizeDisplayPage(this.currentPage), this.totalPages)
+      : await this.renderer.getPageDimensions(this.document, this.currentPage);
     const availableWidth = Math.max(this.stage.clientWidth - 4, 1);
     const availableHeight = Math.max(this.stage.clientHeight - 4, 1);
 
@@ -436,7 +493,42 @@ export class Pageon {
 
   private updateIndicator(): void {
     if (!this.options.showPageIndicator) return;
-    this.indicator.textContent = `Página ${this.currentPage} de ${this.totalPages} · Zoom ${this.scale.toFixed(2)}x · Fit ${this.fitMode}`;
+    this.indicator.textContent = `${this.getPageLabel()} · Zoom ${this.scale.toFixed(2)}x · Fit ${this.fitMode}`;
+  }
+
+  private getPageStep(): number {
+    return this.viewMode === 'spread' ? 2 : 1;
+  }
+
+  private normalizeDisplayPage(page: number): number {
+    const clamped = Math.min(Math.max(page, 1), this.totalPages || 1);
+    if (this.viewMode !== 'spread') return clamped;
+    const odd = clamped % 2 === 0 ? clamped - 1 : clamped;
+    return Math.max(1, odd);
+  }
+
+  private getDisplayCacheKey(page: number): string {
+    return this.viewMode === 'spread'
+      ? `spread:${PageCache.key(page, this.scale)}`
+      : PageCache.key(page, this.scale);
+  }
+
+  private renderDisplay(page: number): Promise<RenderedPage> {
+    if (!this.document) {
+      throw new PageonError({ code: 'RENDER_FAILED', message: 'PDF document is not loaded.' });
+    }
+
+    return this.viewMode === 'spread'
+      ? this.renderer.renderSpread(this.document, page, this.totalPages)
+      : this.renderer.render(this.document, page);
+  }
+
+  private getPageLabel(): string {
+    if (this.viewMode !== 'spread' || this.currentPage >= this.totalPages) {
+      return `Página ${this.currentPage} de ${this.totalPages}`;
+    }
+
+    return `Páginas ${this.currentPage}-${Math.min(this.currentPage + 1, this.totalPages)} de ${this.totalPages}`;
   }
 
   private clampScale(scale: number): number {

@@ -1,10 +1,11 @@
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import type { PageonError } from './PageonError';
 
-export type PageonAnimation = 'none' | 'fade' | 'slide';
+export type PageonAnimation = 'none' | 'fade' | 'slide' | 'page-flip';
 export type PageonFitMode = 'none' | 'width' | 'height' | 'page';
 export type PageonLoadingState = 'idle' | 'loading-document' | 'rendering-page' | 'preloading' | 'error';
 export type PageonSource = string | Blob | ArrayBuffer | File;
+export type PageonViewMode = 'single' | 'spread';
 
 export interface PageonSecurityOptions {
   allowRemote?: boolean;
@@ -30,6 +31,7 @@ export interface PageonStats {
   memoryEstimate: number;
   scale: number;
   fitMode: PageonFitMode;
+  viewMode: PageonViewMode;
 }
 
 export interface PageonOptions {
@@ -44,6 +46,7 @@ export interface PageonOptions {
   maxScale?: number;
   zoomStep?: number;
   fitMode?: PageonFitMode;
+  viewMode?: PageonViewMode;
   keyboard?: boolean;
   gestures?: boolean;
   responsive?: boolean;
@@ -62,6 +65,7 @@ export interface PageonPublicState {
   loadingState: PageonLoadingState;
   scale: number;
   fitMode: PageonFitMode;
+  viewMode: PageonViewMode;
 }
 
 export interface PageonPerformanceEvent {
