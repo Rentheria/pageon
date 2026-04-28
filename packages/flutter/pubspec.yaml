@@ -1,0 +1,24 @@
+name: pageon_flutter
+description: Flutter wrapper for Pageon PDF viewer using WebView bridge.
+version: 0.1.0
+homepage: https://github.com/pageon/pageon
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  assets:
+    - assets/pageon/index.html
+    - assets/pageon/pageon.bundle.js
+    - assets/pageon/pageon-bridge.js
