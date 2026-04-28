@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pageon Vanilla Demo</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #0b1020; color: #e6ecff; }
+      .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+      button, input, select { padding: 8px; border-radius: 6px; border: 1px solid #31457a; background: #111a33; color: #e6ecff; }
+      #viewer { width: min(900px, 100%); aspect-ratio: 3 / 4; border: 1px solid #31457a; border-radius: 8px; background: #1a2545; padding: 8px; }
+      .status { margin-top: 8px; color: #98a6d9; }
+      .error { margin-top: 8px; color: #ff8796; min-height: 24px; }
+    </style>
+  </head>
+  <body>
+    <h1>Pageon Demo</h1>
+    <div class="toolbar">
+      <button id="prev">Anterior</button>
+      <button id="next">Siguiente</button>
+      <label>
+        Ir a:
+        <input id="pageInput" type="number" min="1" value="1" style="width: 72px" />
+      </label>
+      <label>
+        Animación:
+        <select id="animation">
+          <option value="none">none</option>
+          <option value="fade">fade</option>
+          <option value="slide" selected>slide</option>
+        </select>
+      </label>
+      <span id="pageLabel">Página 1 de ?</span>
+    </div>
+
+    <div id="viewer"></div>
+    <div class="status" id="status">Cargando...</div>
+    <div class="error" id="error"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
