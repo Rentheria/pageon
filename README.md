@@ -1,22 +1,11 @@
 # Pageon
 
-Librería moderna y extensible para visualizar PDFs con experiencia de lectura avanzada (zoom, fit modes, teclado, gestos y responsive).
+Librería moderna y extensible para visualizar PDFs con experiencia de lectura avanzada.
 
 ## Monorepo
 
 - `packages/core`: librería principal `@pageon/core`.
 - `examples/vanilla-js`: demo con Vite y JavaScript/TypeScript.
-
-## Requisitos
-
-- Node.js 20+
-- pnpm 10+
-
-## Instalación
-
-```bash
-pnpm install
-```
 
 ## Uso básico
 
@@ -26,99 +15,93 @@ import { Pageon } from '@pageon/core';
 const viewer = new Pageon({
   container: '#viewer',
   src: '/sample.pdf',
-  animation: 'slide',
-  initialPage: 1,
-  scale: 1,
-  preload: 1,
-  showPageIndicator: true,
-  minScale: 0.5,
-  maxScale: 3,
-  zoomStep: 0.25,
-  fitMode: 'none',
-  keyboard: true,
-  gestures: true,
-  responsive: true
+  security: {
+    allowRemote: true,
+    allowedDomains: ['example.com'],
+    allowBlob: true,
+    allowDataUrl: false,
+    maxFileSize: 25 * 1024 * 1024
+  },
+  performance: {
+    maxCachedPages: 8,
+    maxCanvasPixels: 4_000_000,
+    enableAutoCleanup: true,
+    mobileMemoryMode: 'normal'
+  },
+  debug: false,
+  pdfWorkerSrc: '/pdf.worker.min.mjs',
+  useWorker: true
 });
 ```
 
-## Opciones
+## Arquitectura interna
 
-- `animation`: `none | fade | slide`
-- `fitMode`: `none | width | height | page`
-- `scale`, `minScale`, `maxScale`, `zoomStep`
-- `keyboard`, `gestures`, `responsive`
-- `preload`, `initialPage`, `showPageIndicator`
+- `Pageon`: orquestación y estado.
+- `RenderQueue`: cola de render por prioridad.
+- `MemoryManager`: control de memoria/canvas.
+- `SourceValidator`: seguridad de fuentes.
+- `PdfLoader`: integración con PDF.js worker.
 
-## Métodos
+Más detalle: `docs/architecture.md`.
 
-### Navegación
+## Seguridad
 
-- `nextPage()`
-- `prevPage()`
-- `goToPage(page)`
+- Validación estricta del `src`.
+- Bloqueo de esquemas peligrosos (`javascript:`, `file:`).
+- `allowedDomains` para restringir origen remoto.
+- Validación de tamaño y MIME en fuentes binarias.
 
-### Zoom
+Más detalle: `docs/security.md`.
 
-- `zoomIn()`
-- `zoomOut()`
-- `setZoom(scale)`
-- `resetZoom()`
+## Performance
 
-### Fit modes
+- Límite de páginas cacheadas y límite por píxeles por canvas.
+- Limpieza automática de páginas lejanas.
+- Cancelación de renders obsoletos y priorización de página actual.
+- Evento `performance` cuando `debug: true`.
 
-- `fitWidth()`
-- `fitHeight()`
-- `setFitMode(mode)`
+Más detalle: `docs/performance.md`.
 
-### Controles
+## Worker PDF.js
 
-- `enableKeyboard()` / `disableKeyboard()`
-- `enableGestures()` / `disableGestures()`
+Configurable con:
 
-### Ciclo de render
+- `pdfWorkerSrc?: string`
+- `useWorker?: boolean`
 
-- `refresh()`
-- `reload()`
-- `destroy()`
+### Vite
 
-## Eventos
+Configura `pdfWorkerSrc` con un asset servido públicamente o usa el valor default del paquete.
 
-- `loaded`
-- `pageChange`
-- `rendering`
-- `zoomChange`
-- `fitModeChange`
-- `resize`
-- `gesture`
-- `loading`
-- `error`
+### Angular / Ionic
 
-## Estado público
+Asegura que el worker sea copiado a assets estáticos y referencia la URL final en `pdfWorkerSrc`.
 
-`viewer.state` expone:
+## Errores comunes
 
-- `currentPage`, `totalPages`
-- `isLoading`, `isRendering`
-- `loadingState`: `idle | loading-document | rendering-page | preloading | error`
-- `scale`, `fitMode`
+Códigos soportados:
 
-## Ejemplo completo
+- `CONTAINER_NOT_FOUND`
+- `INVALID_SOURCE`
+- `SOURCE_NOT_ALLOWED`
+- `PDF_LOAD_FAILED`
+- `PAGE_NOT_FOUND`
+- `RENDER_FAILED`
+- `RENDER_CANCELLED`
+- `UNSUPPORTED_BROWSER`
+- `MEMORY_LIMIT_EXCEEDED`
 
-La demo `examples/vanilla-js` incluye:
+Más detalle: `docs/troubleshooting.md`.
 
-- Navegación (anterior/siguiente/ir a página)
-- Selector de animación
-- Zoom in/out/reset
-- Fit width/height/page
-- Toggle keyboard y gestures
-- Indicadores de página, zoom, fit mode y loading state
-- Manejo de errores visible
+## Mejores prácticas
 
-## Scripts
+- Restringir dominios en producción.
+- Mantener `allowDataUrl` desactivado por defecto.
+- Reducir `maxCachedPages` en móvil.
+- Suscribirse a `error` y `performance` para diagnósticos.
 
-```bash
-pnpm dev
-pnpm build
-pnpm typecheck
-pnpm test
-```
+## Límites conocidos
+
+- Pageon no implementa DRM ni cifrado propietario.
+- Pageon no hace bypass de CORS.
+- Pageon no ejecuta JavaScript embebido en PDF.
