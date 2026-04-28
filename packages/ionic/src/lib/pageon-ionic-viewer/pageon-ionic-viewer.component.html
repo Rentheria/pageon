@@ -1,0 +1,42 @@
+<div class="pageon-ionic" #gestureSurface>
+  <div class="pageon-toolbar" *ngIf="showToolbar">
+    <button type="button" (click)="prevPage()">Anterior</button>
+    <button type="button" (click)="nextPage()">Siguiente</button>
+    <button type="button" *ngIf="showZoomControls" (click)="zoomOut()">-</button>
+    <button type="button" *ngIf="showZoomControls" (click)="zoomIn()">+</button>
+    <button type="button" (click)="setFitMode('page')">Fit</button>
+  </div>
+
+  <pageon-viewer
+    #viewer
+    [src]="src"
+    [animation]="animation"
+    [initialPage]="initialPage"
+    [scale]="scale"
+    [preload]="preload"
+    [showPageIndicator]="showPageIndicator"
+    [minScale]="minScale"
+    [maxScale]="maxScale"
+    [zoomStep]="zoomStep"
+    [fitMode]="fitMode"
+    [keyboard]="keyboard"
+    [gestures]="false"
+    [responsive]="responsive"
+    (loaded)="onLoaded($event)"
+    (pageChange)="onPageChange($event)"
+    (error)="onError($event)"
+    (rendering)="onRendering($event)"
+    (zoomChange)="onZoomChange($event)"
+    (fitModeChange)="onFitModeChange($event)"
+    (resize)="onResize($event)"
+    (loading)="onLoading($event)">
+  </pageon-viewer>
+
+  <div class="overlay loading" *ngIf="isLoading">{{ loadingState }}...</div>
+  <div class="overlay error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="status" *ngIf="showPageIndicator">
+    <span>{{ currentPage }} / {{ totalPages || '?' }}</span>
+    <span>· {{ currentZoom.toFixed(2) }}x</span>
+  </div>
+</div>
