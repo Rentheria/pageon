@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @pageon/vanilla-js dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @pageon/core test"
   }
 }

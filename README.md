@@ -1,6 +1,6 @@
 # Pageon
 
-Librería moderna y extensible para visualizar PDFs con transiciones animadas entre páginas.
+Librería moderna y extensible para visualizar PDFs con experiencia de lectura avanzada (zoom, fit modes, teclado, gestos y responsive).
 
 ## Monorepo
 
@@ -18,15 +18,7 @@ Librería moderna y extensible para visualizar PDFs con transiciones animadas en
 pnpm install
 ```
 
-## Scripts
-
-```bash
-pnpm dev
-pnpm build
-pnpm typecheck
-```
-
-## API rápida
+## Uso básico
 
 ```ts
 import { Pageon } from '@pageon/core';
@@ -38,11 +30,95 @@ const viewer = new Pageon({
   initialPage: 1,
   scale: 1,
   preload: 1,
-  showPageIndicator: true
+  showPageIndicator: true,
+  minScale: 0.5,
+  maxScale: 3,
+  zoomStep: 0.25,
+  fitMode: 'none',
+  keyboard: true,
+  gestures: true,
+  responsive: true
 });
+```
 
-await viewer.nextPage();
-await viewer.prevPage();
-await viewer.goToPage(3);
-await viewer.destroy();
+## Opciones
+
+- `animation`: `none | fade | slide`
+- `fitMode`: `none | width | height | page`
+- `scale`, `minScale`, `maxScale`, `zoomStep`
+- `keyboard`, `gestures`, `responsive`
+- `preload`, `initialPage`, `showPageIndicator`
+
+## Métodos
+
+### Navegación
+
+- `nextPage()`
+- `prevPage()`
+- `goToPage(page)`
+
+### Zoom
+
+- `zoomIn()`
+- `zoomOut()`
+- `setZoom(scale)`
+- `resetZoom()`
+
+### Fit modes
+
+- `fitWidth()`
+- `fitHeight()`
+- `setFitMode(mode)`
+
+### Controles
+
+- `enableKeyboard()` / `disableKeyboard()`
+- `enableGestures()` / `disableGestures()`
+
+### Ciclo de render
+
+- `refresh()`
+- `reload()`
+- `destroy()`
+
+## Eventos
+
+- `loaded`
+- `pageChange`
+- `rendering`
+- `zoomChange`
+- `fitModeChange`
+- `resize`
+- `gesture`
+- `loading`
+- `error`
+
+## Estado público
+
+`viewer.state` expone:
+
+- `currentPage`, `totalPages`
+- `isLoading`, `isRendering`
+- `loadingState`: `idle | loading-document | rendering-page | preloading | error`
+- `scale`, `fitMode`
+
+## Ejemplo completo
+
+La demo `examples/vanilla-js` incluye:
+
+- Navegación (anterior/siguiente/ir a página)
+- Selector de animación
+- Zoom in/out/reset
+- Fit width/height/page
+- Toggle keyboard y gestures
+- Indicadores de página, zoom, fit mode y loading state
+- Manejo de errores visible
+
+## Scripts
+
+```bash
+pnpm dev
+pnpm build
+pnpm typecheck
+pnpm test
 ```
