@@ -7,6 +7,9 @@
     "dev": "pnpm --filter @pageon/vanilla-js dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm --filter @pageon/core test"
+    "test": "pnpm --filter @pageon/core test",
+    "build:angular": "pnpm --filter @pageon/angular build",
+    "dev:angular": "pnpm --filter @pageon/angular dev",
+    "typecheck:angular": "pnpm --filter @pageon/angular typecheck"
   }
 }
