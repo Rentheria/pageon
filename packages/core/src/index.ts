@@ -1,2 +1,12 @@
 export { Pageon } from './Pageon';
-export type { PageonOptions, PageonEvents, PageonAnimation, PageonPublicState } from './types';
+export { EventEmitter } from './EventEmitter';
+export { PageCache } from './PageCache';
+export { KeyboardController } from './KeyboardController';
+export type {
+  PageonOptions,
+  PageonEvents,
+  PageonAnimation,
+  PageonFitMode,
+  PageonLoadingState,
+  PageonPublicState
+} from './types';

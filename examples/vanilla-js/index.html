@@ -8,20 +8,18 @@
       body { font-family: system-ui, sans-serif; margin: 0; padding: 16px; background: #0b1020; color: #e6ecff; }
       .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
       button, input, select { padding: 8px; border-radius: 6px; border: 1px solid #31457a; background: #111a33; color: #e6ecff; }
-      #viewer { width: min(900px, 100%); aspect-ratio: 3 / 4; border: 1px solid #31457a; border-radius: 8px; background: #1a2545; padding: 8px; }
+      #viewer { width: min(900px, 100%); height: min(70vh, 780px); border: 1px solid #31457a; border-radius: 8px; background: #1a2545; padding: 8px; }
       .status { margin-top: 8px; color: #98a6d9; }
       .error { margin-top: 8px; color: #ff8796; min-height: 24px; }
+      .metrics { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
     </style>
   </head>
   <body>
-    <h1>Pageon Demo</h1>
+    <h1>Pageon Demo Fase 2</h1>
     <div class="toolbar">
       <button id="prev">Anterior</button>
       <button id="next">Siguiente</button>
-      <label>
-        Ir a:
-        <input id="pageInput" type="number" min="1" value="1" style="width: 72px" />
-      </label>
+      <label>Ir a: <input id="pageInput" type="number" min="1" value="1" style="width: 72px" /></label>
       <label>
         Animación:
         <select id="animation">
@@ -30,11 +28,24 @@
           <option value="slide" selected>slide</option>
         </select>
       </label>
+      <button id="zoomIn">Zoom +</button>
+      <button id="zoomOut">Zoom -</button>
+      <button id="zoomReset">Reset zoom</button>
+      <button id="fitWidth">Fit width</button>
+      <button id="fitHeight">Fit height</button>
+      <button id="fitPage">Fit page</button>
+      <button id="toggleKeyboard">Keyboard: on</button>
+      <button id="toggleGestures">Gestures: on</button>
       <span id="pageLabel">Página 1 de ?</span>
     </div>
 
     <div id="viewer"></div>
     <div class="status" id="status">Cargando...</div>
+    <div class="metrics">
+      <span id="zoomLabel">Zoom: -</span>
+      <span id="fitLabel">Fit: -</span>
+      <span id="loadingLabel">Loading: -</span>
+    </div>
     <div class="error" id="error"></div>
 
     <script type="module" src="/src/main.ts"></script>
