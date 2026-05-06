@@ -13,6 +13,9 @@
   "bugs": {
     "url": "https://github.com/rentheria/pageon/issues"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "pnpm --filter @pageon/vanilla-js dev",
     "build": "pnpm -r build",
@@ -22,6 +25,13 @@
     "dev:angular": "pnpm --filter @pageon/angular dev",
     "typecheck:angular": "pnpm --filter @pageon/angular typecheck",
     "build:ionic": "pnpm --filter @pageon/ionic build",
-    "dev:ionic-example": "pnpm --filter @pageon/ionic-example dev"
+    "dev:ionic-example": "pnpm --filter @pageon/ionic-example dev",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.4",
+    "shx": "^0.3.4"
   }
 }

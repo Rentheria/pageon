@@ -4,5 +4,6 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "declarationMap": false
-  }
+  },
+  "exclude": ["src/__tests__"]
 }

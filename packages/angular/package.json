@@ -1,6 +1,7 @@
 {
   "name": "@pageon/angular",
   "version": "0.1.0",
+  "description": "Angular adapter for @pageon/core PDF viewer with component bindings and event outputs",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -11,8 +12,38 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "pdf",
+    "viewer",
+    "angular",
+    "pageon",
+    "pdf-viewer",
+    "angular-component",
+    "document-viewer"
+  ],
+  "author": "Rentheria",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rentheria/pageon.git",
+    "directory": "packages/angular"
+  },
+  "homepage": "https://github.com/rentheria/pageon",
+  "bugs": {
+    "url": "https://github.com/rentheria/pageon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && mkdir -p dist/lib/pageon-viewer && cp src/lib/pageon-viewer/pageon-viewer.component.html dist/lib/pageon-viewer/pageon-viewer.component.html && cp src/lib/pageon-viewer/pageon-viewer.component.scss dist/lib/pageon-viewer/pageon-viewer.component.scss && cp README.md dist/README.md && cp package.json dist/package.json",
+    "build": "tsc -p tsconfig.build.json && shx mkdir -p dist/lib/pageon-viewer && shx cp src/lib/pageon-viewer/pageon-viewer.component.html dist/lib/pageon-viewer/pageon-viewer.component.html && shx cp src/lib/pageon-viewer/pageon-viewer.component.scss dist/lib/pageon-viewer/pageon-viewer.component.scss",
+    "prepublishOnly": "pnpm run build",
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

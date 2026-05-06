@@ -1,6 +1,7 @@
 {
   "name": "@pageon/ionic",
   "version": "0.1.0",
+  "description": "Ionic adapter for @pageon/core PDF viewer with mobile-optimized components and touch controls",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -11,8 +12,39 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "pdf",
+    "viewer",
+    "ionic",
+    "angular",
+    "pageon",
+    "pdf-viewer",
+    "mobile",
+    "document-viewer"
+  ],
+  "author": "Rentheria",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rentheria/pageon.git",
+    "directory": "packages/ionic"
+  },
+  "homepage": "https://github.com/rentheria/pageon",
+  "bugs": {
+    "url": "https://github.com/rentheria/pageon/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && mkdir -p dist/lib/pageon-ionic-viewer && cp src/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.html dist/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.html && cp src/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.scss dist/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.scss && cp README.md dist/README.md && cp package.json dist/package.json",
+    "build": "tsc -p tsconfig.build.json && shx mkdir -p dist/lib/pageon-ionic-viewer && shx cp src/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.html dist/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.html && shx cp src/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.scss dist/lib/pageon-ionic-viewer/pageon-ionic-viewer.component.scss",
+    "prepublishOnly": "pnpm run build",
     "dev": "tsc -p tsconfig.build.json --watch",
     "typecheck": "tsc --noEmit"
   },

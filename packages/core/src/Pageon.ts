@@ -117,7 +117,7 @@ export class Pageon {
       ...(typeof this.options.pdfWorkerSrc === 'string' && this.options.pdfWorkerSrc.trim().length > 0 ? { workerSrc: this.options.pdfWorkerSrc } : {}),
       useWorker: this.options.useWorker
     });
-    this.memory = new MemoryManager(this.options.performance);
+    this.memory = new MemoryManager(this.options.performance as Required<PageonPerformanceOptions>);
     this.cache = new PageCache(this.options.performance.maxCachedPages, (rendered) => this.memory.releaseCanvas(rendered));
 
     this.stage = document.createElement('div');

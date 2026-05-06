@@ -1,9 +1,9 @@
-import type { PDFDocumentProxy, PDFRenderTask } from 'pdfjs-dist';
+import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import { PageonError } from './PageonError';
 import type { RenderedPage } from './types';
 
 export class PageRenderer {
-  private renderTask: PDFRenderTask | null = null;
+  private renderTask: RenderTask | null = null;
   private activeRenderId = 0;
   private scale: number;
 
